@@ -1,0 +1,258 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+%\usepackage{a4wide}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{verbatim}
+%\usepackage{todonotes}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{hyperref}
+
+\usepackage[top=1in, bottom=1.25in, left=1.25in, right=1.25in]{geometry}
+%\usepackage{tikz}
+%\usetikzlibrary{decorations.markings,arrows}
+
+%\parindent = 0 pt
+%\parskip = 5 pt
+
+\newcommand{\real}{\hbox{\bf R}}
+
+\begin{document}
+	
+	
+\input{header_tp}
+
+
+\section*{Contexto y motivación}
+
+Las competencias deportivas, en todas sus variantes y disciplinas, requieren casi inevitablemente la comparación entre competidores
+mediante la confección de \emph{Tablas de Posiciones} y \emph{rankings} en base a resultados obtenidos en un período de tiempo determinado. 
+Estos ordenamientos de equipos están generalmente (aunque no siempre) basados en reglas relativamente claras y simples, como proporción 
+de victorias sobre partidos jugados o el clásico sistema de puntajes por partidos ganados, empatados y perdidos. Sin embargo, estos métodos
+simples y conocidos por todos muchas veces no logran capturar la complejidad de la competencia y la comparación. Esto es particularmente
+evidente en ligas donde, por ejemplo, todos los equipos no juegan la misma cantidad de veces entre sí.
+
+A modo de ejemplo, la NBA (\textit{National Basketball Association}) y la NFL (\textit{National Football League}) representan dos ligas con fixtures de temporadas regulares con estas características, como así también el ranking de la ATP (\textit{Association of Tennis Professionals}) posee el suyo.
+
+En los últimos tiempos, hasta el Torneo de 
+Primera División de AFA (Asociación del Fútbol Argentino) ha tenido versiones en donde se pareció a este tipo de competencias en donde los fixtures para los equipos no eran equivalentes.
+
+Como contraparte, estos rankings son utilizados muchas veces como criterio de decisión, por ejemplo para determinar la participación en alguna competencia de nivel internacional. En el caso de competencias en los Estados Unidos, las posiciones finales determinan cuál es la prioridad
+entre los equipos para la elección de los nuevos jugadores que ingresan a la liga mediante el conocido proceso de \emph{Draft}. Luego, la confección 
+de los rankings finales de los equipos constituye un elemento sensible, afectando intereses deportivos y económicos de gran relevancia. 
+
+En un contexto de extremada desconfianza respecto a los manejos a nivel local, regional e internacional de las confederaciones de fútbol, en este
+trabajo nos proponemos estudiar el comportamiento de otras métricas para la generación de rankings en competencias deportivas con el fin de brindar
+mayor transparencia y nivelar la competitividad, en un futuro, de nuestras ligas locales.
+
+
+\section*{El problema}
+
+Existen en la literatura distintos enfoques para abordar el problema de determinar el \emph{ranking} de equipos de una competencia en
+base a los resultados de un conjunto de partidos. 
+En Govan et al.\cite{Govan2008} se hace una breve reseña de varios de ellos, e incluso los 
+autores proponen uno nuevo.\footnote{Remarcamos que este no es el método involucrado en el este TP y será visto más adelante en la materia.}
+Entre los métodos presentados se encuentra el denominado \emph{Colley Matrix Method} (CMM) \cite{Colley,Govan2008}. El método se basa en la \emph{Regla de Laplace de 
+sucesos} y solo requiere conocer el historial de partidos y los respectivos resultados (básicamente, quién ganó) de los mismos. Esta regla 
+permite aproximar las probabilidades de eventos \emph{booleanos}, en nuestro caso que un equipo gane o pierda un partido. En particular, si sobre 
+$k$ eventos observamos $s$ casos exitosos, la regla establece que $\frac{s+1}{k+2}$ es un mejor estimador que el porcentaje estándar $\frac{s}{k}$. En base a esta
+idea, el problema se reformula como la resolución de un sistema de ecuaciones lineales, que permite obtener estos estimadores y, por lo tanto, el ranking deseado.
+
+Extendiendo la notación introducida en Govan et al.\cite{Govan2008}, sea $\Gamma = \{1,2,\dots,T\}$ el conjunto de equipos/participantes de la competencia.
+Para cada equipo $i \in \Gamma$ llamamos $n_i$ al número total de partidos jugados por el equipo $i$, $w_i$ al número de partidos ganados por el
+equipo $i$ y, análogamente, $l_i$ al número de partidos perdidos por el equipo $i$. Definimos también dados $i,j \in \Gamma$, $i \ne j$, $n_{ij}$ 
+al número de enfrentamientos entre $i$ y $j$. Es importante destacar que el modelo asume que el empate \textbf{no} es un resultado posible y por lo tanto $n_i = w_i + l_i$
+
+El método CMM propone construir una matriz $C \in \mathbb{R}^{T \times T}$ y un vector $b \in \mathbb{R}^T$, tal que el ranking buscado $r \in \mathbb{R}^T$
+sea la solución del sistema $C \, r = b$. Para el armado del sistema, se define
+$\forall i,j \in \Gamma$:
+
+\begin{equation}
+C_{ij} = \left\{
+	\begin{array}{rl}
+	-n_{ij} & \text{si } i \ne j,\\
+	2 + n_i & \text{si } i = j.
+	\end{array} \right.
+\end{equation}
+%
+\begin{equation*}
+b_i = 1 + \frac{w_i - l_i}{2}
+\end{equation*}
+
+
+Los detalles respecto a la formulación del sistema pueden ser consultados en Colley \cite{Colley}. Este método puede ser aplicado a una gran variedad de 
+deportes y tipos de competencias, incluyendo información de conferencias, divisiones, etc. El objetivo central de este trabajo práctico consiste en
+estudiar el comportamiento del mismo, en conjunto con el análisis de algunos de los métodos que pueden ser utilizados para su resolución.
+
+Como punto de comparación, se \textbf{deberá} considerar (al menos) un método alternativo para generar rankings. Una opción es considerar el \emph{porcentaje 
+de victorias} (WP), donde el puntaje asignado al equipo $i \in \Gamma$ está dado por $\frac{w_i}{w_i + l_i}$. 
+%
+En caso de ser factible, es posible también incorporar el método que se aplique en la competencia elegida.
+
+
+\section*{Enunciado}
+
+Se \textbf{debe} implementar un programa en \verb-C++- que tome como entrada el detalle de los partidos de la competencia y calcule el ranking
+en función de los métodos mencionados en la sección anterior (CMM, WP y el método elegido por el grupo). El formato de los archivos de entrada/salida se detalla en la siguiente sección.
+
+Como parte \textbf{obligatoria} en relación a los métodos de resolución de sistemas
+de ecuaciones lineales, se pide implementar el método de Eliminación Gaussiana (EG) sin permutaciones.
+
+Previamente, \textbf{se deberán} estudiar las características de la matriz involucrada en CMM y responder a lo siguiente:
+\begin{enumerate}
+	\item ¿Qué tipo de matriz resulta $C$? 
+	\item ¿Cómo se garantiza la aplicabilidad de EG sin intercambio de filas o columnas? 
+	\item ¿Qué se puede decir sobre la estabilidad de los cálculos?
+%	\item Calcular el número de condición de $\mM$ con norma 1 ¿Cómo influye el valor de $p$? \\
+%	Para este punto se \textit{sugiere} consultar el material de la cátedra y la bibliografía, en particular \cite{burden2002numerical}.
+\end{enumerate}
+
+Además, sabemos que existen casos donde el algoritmo EG no puede encontrar una solución.
+Se \textbf{debe} incluir en el desarrollo una justificación sobre por qué el algoritmo funciona correctamente en el caso del método CMM.
+
+También, \textbf{se pide} realizar un informe utilizando como guía las pautas de laboratorio de la materia conteniendo la experimentación pedida en la siguiente sección.
+Es importante incluir en la sección desarrollo del informe del trabajo práctico, las alternativas consideradas y descartadas para cada uno de los métodos utilizados.
+
+Se \textbf{recomienda} fuertemente en todos los casos comparar los resultados intermedios utilizando python, Matlab/Octave o R.
+
+
+
+\section*{Experimentación}
+
+Se deberá realizar tanto un análisis \textbf{cualitativo} como \textbf{cuantitativo} de los métodos vistos en el trabajo práctico.
+
+\subsection*{Análisis cuantitativo}
+
+Se \textbf{pide}, analizar y reportar los errores obtenidos en el ranking analizando el error absoluto con respecto a los test de la cátedra y los propios generados por el grupo en donde se evidencien problemas.
+
+
+\subsection*{Análisis cualitativo}
+
+Analizar el comportamiento de los métodos CMM, WP y el elegido por los integrantes del grupo. 
+Entre los experimentos a realizar, se \textbf{debe} como mínimo analizar los siguientes aspectos e intentar responder las siguientes preguntas:
+
+\begin{enumerate}
+\item Utilizar datos de competencias reales que permitan identificar características distintivas de los métodos, y relacionarlas con eventos 
+que ocurren en los mismos. Comparar los rankings obtenidos por cada uno de los métodos considerados.
+\item ¿El método CMM es \emph{justo}? Es decir, ¿es posible que el resultado de un partido entre dos equipos afecte indirectamente el ranking de un tercero?
+\item Dados los resultados de todos los partidos considerados en la competencia, y un equipo particular, determinar una estrategia que permita obtener la mayor posición posible, buscando minimizar el número de partidos ganados.\footnote{No es necesario que la cantidad de partidos ganados sea la mínima, pero sí que la estrategia planteada trate de minimizar este aspecto.}
+\end{enumerate}
+
+En todos los casos es \textbf{obligatorio} fundamentar los experimentos planteados, proveer los archivos e información necesarios para replicarlos, presentar los 
+resultados de forma conveniente y clara y analizar los mismos con el nivel de detalle apropiado. En caso de ser necesario, es posible también generar
+instancias artificiales con el fin de ejemplificar y mostrar un comportamiento determinado.
+
+\subsection*{Puntos opcionales}
+
+Como puntos opcionales para incluir en el desarrollo y/o experimentación sobre el método CMM, se considera lo siguiente:
+%
+\begin{enumerate}
+
+\item Proponer y discutir (al menos) una forma alternativa de modelar el empate entre equipos.
+
+\item La matriz resultante del sistema planteado por el método CMM tiene una característica que permite encontrar una factorización para resolver el sistema de forma más eficiente. Implementar y comprar con el método de Eliminación Gaussiana.
+
+\item Implementar una estructura de matrices ralas que sea eficiente en espacio y en tiempo para la tarea que se busca realizar sobre la matriz de CMM. ¿En qué situaciones se justifica esta implementación?
+
+%\item ¿Qué método se puede desarrollar para evitar rehacer cálculos si queremos actualizar un ranking que se utilizará en un torneo (todos contra todos)? % LU -> no va 
+
+\end{enumerate}
+
+
+\section*{Parámetros y formato de archivos}
+
+El programa deberá tomar por línea de comandos tres parámetros. El primero de ellos contendrá el \textit{path} al archivo de entrada con los partidos y resultados de la competencia; el segundo la salida con el ranking correspondiente, y el tercero indicando el método a considerar: 0 CMM, 1 WP, 2 alternativo. Ejemplo:
+
+\begin{verbatim}
+$ ./tp1 0 partidos.tsv  ranking.out
+\end{verbatim}
+
+El archivo de entrada contiene primero una línea con información sobre la cantidad de participantes/equipos $T$, y la cantidad de partidos totales a considerar $P$. 
+Luego, siguen $P$ líneas donde cada una de ellas representa un partido y contiene la siguiente información separada por espacios o tabulador: 
+identificador de fecha (es un dato opcional al problema de tipo  \verb|int| o \verb+string+, pero que puede ayudar a la hora de experimentar), equipo $i$, goles equipo $i$, equipo $j$, goles equipo $j$.
+
+A continuación se muestra el archivo de entrada con la información del ejemplo utilizado en Govan et al.\cite{Govan2008}:
+
+\begin{verbatim}
+6 10
+1 1 16 4 13
+1 2 38 5 17
+1 2 28 6 23
+1 3 34 1 21
+1 3 23 4 10
+1 4 31 1 6
+1 5 33 6 25
+1 5 38 4 23
+1 6 27 2 6
+1 6 20 5 12
+\end{verbatim}
+
+Es importante destacar que, en este último caso, los equipos son identificados mediante un número. Opcionalmente podrá considerarse un archivo que contenga,  para cada equipo, cuál es el código con el que se lo identifica.
+
+Una vez ejecutado el algoritmo, el programa deberá generar un archivo de salida que contenga una línea por cada
+equipo ($n$ líneas en total), acompañada del puntaje obtenido por el algoritmo CMM/WP/método alternativo. Ejemplo:
+
+\begin{verbatim}
+0.359707
+0.615978
+0.668661
+0.314936
+0.501544
+0.539174
+\end{verbatim}
+
+Además, se \textbf{deberá} entregar un archivo \texttt{README} conteniendo la instrucciones de compilación y ejecución, y también ejemplos de invocación del programa.
+
+
+\subsection*{Conjuntos de datos}
+
+Para instancias correspondientes a resultados entre equipos, la cátedra provee algunas opciones con información real de resultados en distintas competencias.
+Desde ya que cada grupo puede buscar/generar sus propios conjuntos de datos en caso que así lo considere.
+\begin{enumerate}
+	\item En \cite{ATP} se provee un extenso set de datos con resultados históricos de la liga ATP de tenis profesional, divididos por año. Si bien los archivos contienen
+	estadísticas detalladas sobre los partidos del circuito, en nuestro caso solo se necesitan un subconjunto muy reducido de los mismos. 
+	\item Por otro lado, en \cite{Massey} se proveen resultados detallados para distintas ligas, profesionales y universitarias, de los Estados Unidos. Si bien es fácil interpretar los archivos, la cátedra
+	provee junto con este enunciado \textit{scripts} en \texttt{python} para poder traducir los archivos obtenidos en cada uno de estos repositorios al formato requerido por el TP\footnote{Los mismos son opcionales. En caso de encontrar algún error en los mismos, por favor comunicarlo a la brevedad a la lista de docentes de la materia.}.
+	\item Finalmente, otra alternativa es considerar el 
+	repositorio DataHub \cite{datahub}, que contiene información estadística y resultados para distintas ligas y deportes de todo el mundo. En este caso, no se proveen herramientas adicionales para su pre-procesamiento.
+\end{enumerate}
+
+
+\subsection*{Casos de test}
+
+La cátedra proveerá un conjunto de tests con archivos de entrada y salida esperada. 
+Para aprobar el trabajo, los mismos \textbf{deberán} funcionar correctamente en sus implementaciones con una tolerancia máxima de $10^{-4}$ medida en error absoluto con respecto a los valores de ranking proporcionados.
+
+%Además, cada test \textbf{deberá} correr en las computadoras del laboratorio en un tiempo de similar en orden de magnitud al indicado.
+
+
+
+\section*{Fechas de entrega}
+
+\begin{itemize}
+	\item \textit{Formato Electrónico:} domingo 3 de Mayo hasta las 23.59 hs, enviando el trabajo (informe + código) a la dirección \verb+metnum.lab@gmail.com+.
+	%
+	\begin{itemize}
+		\item   El asunto del correo debe comenzar con el texto \verb+[TP1]+  seguido de la lista de apellidos  de los integrantes del grupo separados por punto y coma \verb|;|.
+		
+		\item  Se ruega no sobrepasar el máximo permitido de archivos adjuntos de 20MB. Tener en cuenta al realizar la entrega de no ajuntar bases de datos disponibles en la web, resultados duplicados o archivos de backup.
+	\end{itemize}
+	
+
+	\item \textit{Recuperatorio:} domingo 24 de Mayo hasta las 23.59 hs, enviando el trabajo corregido a \verb+metnum.lab@gmail.com+.
+	
+	\item Pautas de laboratorio:\\
+	{\footnotesize \url{https://campus.exactas.uba.ar/pluginfile.php/163805/course/section/22657/pautas.pdf}}	
+	
+\end{itemize}
+
+\noindent \textbf{Importante:} El horario es estricto. No se considerar\'an correos enviados despu\'es de hora.  
+
+
+\bibliographystyle{plain}
+\bibliography{tp1}
+
+\end{document}
+

@@ -1,0 +1,417 @@
+\documentclass[handout]{beamer}
+\usepackage{listings}
+\usepackage{pgf}
+\usepackage{verbatim}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+
+\usepackage{tikz}
+\usepackage{times}
+
+\usetikzlibrary{arrows,automata}
+
+
+%chequear tiempos de cholesky
+%fecha de entrega!
+%sacar pedazos del paper para que lean
+%coaches mejores pagos
+%	
+%chances de tampa bay
+%http://www.buccaneers.com/news/article-smith/Playoff-Update-Smallest-Hope-Remains/ca47386f-8edb-485a-b128-2bca319ccc61
+%revista volver al futuro
+
+ 
+\pgfdeclareimage[interpolate=true,height=5cm]{tabla}{tabla} 
+\pgfdeclareimage[interpolate=true,height=6cm]{nba-standings}{nba-standings} 
+\pgfdeclareimage[interpolate=true,height=6cm]{ranking-atp}{ranking-atp} 
+\pgfdeclareimage[interpolate=true,height=5cm]{player-stats}{player-stats} 
+\pgfdeclareimage[interpolate=true,height=3cm]{nfl_ex_teams}{nfl_ex_teams} 
+\pgfdeclareimage[interpolate=true,height=6cm]{nfl_ex_matches}{nfl_ex_matches} 
+\pgfdeclareimage[interpolate=true,height=6cm]{almanac}{almanac} 
+\pgfdeclareimage[interpolate=true,height=3.5cm]{fight}{fight} 
+\pgfdeclareimage[interpolate=true,height=5cm]{moneyball}{moneyball} 
+\pgfdeclareimage[interpolate=true,height=5cm]{straw}{straw}
+\pgfdeclareimage[interpolate=true,height=5cm]{trouble}{trouble} 
+\pgfdeclareimage[interpolate=true,height=2.5cm]{tampa}{tampa}
+\pgfdeclareimage[interpolate=true,height=2cm, width=11cm]{tampa2}{tampa2}
+
+\begin{document}
+%\title{Métodos Numéricos - Trabajo Práctico 1 \\ \emph{(No) Todo Pasa}}   
+%\date{}
+%\lstset{language=C}
+\lstdefinestyle{customc}{
+ belowcaptionskip=1\baselineskip,
+ breaklines=true,
+ language=C,
+ showstringspaces=false,
+ basicstyle=\footnotesize,
+ keywordstyle=\color{blue!40!black},
+ commentstyle=\tiny\color{purple!40!black},
+ stringstyle=\color{orange},
+}
+\lstset{style=customc}
+
+\frame{%\titlepage
+
+\begin{center}
+\LARGE
+Métodos Numéricos - Trabajo Práctico 1\\~\\
+
+\large
+\emph{Sistemas de Ecuaciones Lineales}
+\end{center}
+
+\begin{center}
+%\pgfuseimage{almanac}
+\pgfuseimage{almanac}
+\end{center}
+
+} 
+
+\frame{
+	\frametitle{Motivación}
+
+	\begin{block}{Sports Analytics}
+	Utilización de técnicas estadísticas, inteligencia artificial y optimización en el deporte
+	\end{block}
+
+	\begin{center}
+	\pgfuseimage{straw}
+	~
+	%\pgfuseimage{nba-standings}
+	\pgfuseimage{moneyball}
+	\end{center}
+	
+}
+
+\frame{
+	\frametitle{Motivación}
+	\framesubtitle{Confección de rankings y tablas de posiciones}
+
+	\begin{center}
+	\pgfuseimage{ranking-atp}
+	~
+	\pgfuseimage{nba-standings}
+	\end{center}
+
+}
+
+\frame{
+	\frametitle{Motivación}
+	\framesubtitle{Confección de rankings y tablas de posiciones}
+
+% 	\begin{minipage}{0.97\textwidth}
+	\begin{block}{¿Por qué es importante el ranking?}
+	\begin{itemize}[<+->]
+	\item Determina quién es el \emph{mejor} del torneo
+	\item Clasifica a copas etapas posteriores (playoffs) y/o competencias internacionales (Libertadores, Masters, etc). \emph{Drafts}
+	\item Mucha mucha plata en juego
+	\item Rankear \emph{cosas} es un problema mucho más abarcativo y con ideas extrapolables (e.g. rankeo de páginas web, rankeo de publicidades)
+	\end{itemize}
+	\end{block}
+% 	\end{minipage}
+% 	\begin{minipage}{0.4\textwidth}
+% 	\pgfuseimage{fight}
+% 	\end{minipage}
+
+\pause
+
+	\begin{block}{Preguntas}
+	\begin{itemize}[<+->]
+	\item ¿Qué métodos/reglas/procedimientos conocen para encarar el problema?
+	\item ¿Cómo son las competencias/torneos?
+	\end{itemize}
+	\end{block}
+
+}
+
+\frame{
+	\frametitle{Motivación}
+	\framesubtitle{Confección de rankings y tablas de posiciones}
+
+	\begin{block}{Algunos ejemplos}
+	\begin{itemize}
+	\item En algunas ligas, no todos los equipos se enfrentan todos contra todos (NFL, MLB, NCAA)
+	\pgfuseimage{tampa2}
+	\item Aún cuando se enfrentan todos contra todos, no lo hacen la misma cantidad de veces (ej: NBA, 30 equipos, 82 partidos en temporada regular)
+	\item Caso raro: Torneo de Primera División AFA
+	\end{itemize}
+	\end{block}
+
+\pause
+
+	\begin{block}{Pregunta}
+	¿Cómo podemos manejar estos casos?
+	\end{block}
+
+}
+
+\frame{
+	\frametitle{Colley Matrix Method (CMM)}
+	\framesubtitle{Descripción general}
+
+	\begin{block}{Algunos objetivos}
+	\begin{itemize}
+	\item Un método simple, que capture la complejidad del problema
+	\item Sólo utilice victorias y derrotas, dejando de lado los marcardores
+	\item Reproducible
+	\item Incorpore la dificultad del schedule de cada equipo
+	\item Asume que el empate no es un resultado posible (solo victorias/derrotas)
+	\end{itemize}
+	\end{block}
+
+\pause
+
+	\begin{block}{Idea general}
+	Dados los resultados obtenidos por un equipo, obtener la probabilidad de que el equipo gane el próximo partido
+	\end{block}
+
+}
+
+\frame{
+	\frametitle{Colley Matrix Method (CMM)}
+	\framesubtitle{Primer paso: estimador para victoria en el próximo partido}
+
+	\begin{block}{Laplace rule of succession}
+	Consideremos $k$ ensayos con dos resultados posibles: éxito (victoria) y fracaso (derrota). Sea $s$ el número de éxitos obtenidos, en algunas circunstancias,  $(s+1)/(k+2)$ es un mejor estimador que $s/k$ de que el próximo ensayo sea exitoso
+	\end{block}
+
+	\begin{block}{Ejemplo}
+	Supongamos que todos los ensayos fueron exitosos. Entonces, $s/k = k/k = 1$, y no deja lugar a que el ensayo sea fallido. Para valores grandes
+	de $k$, ambos estimadores se comportan de forma similar
+	\end{block}
+
+}
+
+\frame{
+	\frametitle{Colley Matrix Method (CMM)}
+	\framesubtitle{Segundo paso: notación}
+
+	\begin{itemize}
+	\item $\Gamma = \{1,2,\dots,T\}$ el conjunto de equipos
+	\item Dado $i \in \Gamma$, llamamos: 
+	\begin{itemize}
+	\item $n_i$ al total de partidos jugados
+	\item $w_i$ la cantidad de partidos ganados 
+	\item $l_i$ la cantidad de partidos perdidos
+	\end{itemize}
+	\item Dados $i,j \in \Gamma$, llamamos $n_{ij}$ a la cantidad de partidos jugados entre $i$ y $j$. Notar que $n_{ij} = n_{ji}$
+	\end{itemize}
+
+	El estimador para la probabilidad de que el equipo $i$ gane el próximo partido es
+	\begin{displaymath}
+	r_i = \frac{1 + w_i}{2 + n_i} = \frac{1 + w_i}{2 + w_i + l_i}
+	\end{displaymath}
+
+}
+
+\frame{
+	\frametitle{Colley Matrix Method (CMM)}
+	\framesubtitle{Tercer paso: incorporando el schedule}
+
+	{\small
+	Sabemos que:
+	\begin{itemize}
+	\item $n_i = w_i + l_i$
+	\item Si no tenemos información sobre los equipos, podemos pensar que $r_i = 1/2$ para $i \in \Gamma$
+	\item Notar que $n_i$ puede incluir más de un partido contra un mismo equipo. Llamamos $r_j^i$ al rating del $j$-ésimo oponente de $i$
+	\end{itemize}
+
+	Reescribimos 
+	\begin{eqnarray*}
+	w_i & = & (w_i - l_i)/2 + n_i/2\\ 
+		& = & (w_i - l_i)/2 + \sum_{j = 1}^{n_i} 1/2\\
+		& \approx & (w_i - l_i)/2 + \sum_{j = 1}^{n_i} r_j^i 
+	\end{eqnarray*}
+	}
+
+}
+
+\frame{
+	\frametitle{Colley Matrix Method (CMM)}
+	\framesubtitle{Último paso: armamos el sistema}
+
+	El rating de un equipo depende de los ratings contra los que jugó:
+	\begin{displaymath}
+	r_i = \frac{1 + w_i}{2 + n_i}~~~\textrm{ y }~~~~w_i  =  \frac{w_i - l_i}{2}+ \sum_{j = 1}^{n_i} r_j^i 
+	\end{displaymath}
+
+	Despejando, tenemos que 
+	\begin{equation*}
+	(2 + n_i)r_i - \sum_{j = 1}^{n_i} r_j^i = 1 + \frac{w_i - l_i}{2}~~~~~\textrm{para }i \in \Gamma
+	\end{equation*}
+
+	Esto nos lleva a un sistema $C r = b$, con $C \in \mathbb{R}^{T \times T}$, $b \in \mathbb{R}^T$, con
+\begin{equation*}
+C_{ij} = \left\{
+	\begin{array}{rl}
+	-n_{ij} & \text{si } i \ne j,\\
+	2 + n_i & \text{si } i = j.
+	\end{array} \right.
+\end{equation*}
+
+\noindent y $b_i = 1 + (w_i - l_i)/2$, $i \in \Gamma$
+
+}
+
+\frame{
+	\frametitle{Colley Matrix Method (CMM)}
+	\framesubtitle{Algunos comentarios generales}
+
+	\begin{itemize}
+	\item $C$ es lo que se conoce como \emph{Matriz de Colley}
+	\item La matriz $C$ tiene un tipo especial%es \emph{Simétrica y Definida Positiva} (SDP)
+	\item Dada una secuencia de partidos y sus resultados, podemos formular el sistema, obtener los ratings $r_i$ de cada equipo y ordenarlos en forma decreciente
+	\end{itemize}
+
+\pause
+
+	\begin{block}{Preguntas}
+	\begin{itemize}
+	\item ¿Qué necesitamos para que el método \emph{funcione}?
+	\item ¿Se les ocurre algún problema que pueda surgir con el método?
+	\end{itemize}
+	\end{block}
+
+
+}
+
+\frame{
+	\frametitle{Aplicando CMM en la práctica}
+	\framesubtitle{Ejemplo (Govan et al., 2008)}
+
+	\begin{minipage}{0.45\textwidth}
+	\begin{center}
+	\pgfuseimage{nfl_ex_matches}
+	\end{center}
+	\end{minipage}
+	~
+	\begin{minipage}{0.5\textwidth}
+	\begin{center}
+	\pgfuseimage{nfl_ex_teams}
+
+	\vspace*{1cm}
+
+	%\pgfuseimage{nfl_ex_graph}
+	\end{center}
+	\end{minipage}
+
+}
+
+\section{Enunciado}
+
+\frame{
+    \frametitle{TP1}
+    \framesubtitle{Objetivos generales}
+
+    \begin{itemize}
+    \item Trabajar sobre una aplicación real, implementando prototipos de algoritmos relevantes utilizados en la práctica
+    \item Simular un trabajo de investigación:
+	\begin{itemize}
+	\item Lectura de literatura (qué hay hecho)
+	\item Desarrollo de algoritmos para el problema
+	\item Decisiones de implementación
+	\item Experimentación, en dos contextos distintos de aplicación
+	\end{itemize}
+	\item Utilizar datos reales
+    \end{itemize}
+
+}
+
+\frame{
+    \frametitle{TP1: Implementación}
+	
+    \begin{itemize}
+    \item Eliminación Gaussiana (EG) para resolver el sistema
+	\item Especificar en el desarrollo alternativas consideradas para la representación de las matrices e implementación de los métodos
+    \end{itemize}
+
+	\begin{exampleblock}{Recordar}
+	La implementación no es lo único que nos importa
+	\end{exampleblock}
+}
+
+\frame{
+    \frametitle{TP1: Experimentación}
+	{\small
+	\begin{block}{Análisis cuantitativo}
+	\begin{itemize}
+	\item Análisis de errores en el cálculo del ranking
+	\item En todos los casos, justificar elecciones y decisiones tomadas
+	\end{itemize}
+	\end{block}
+
+\pause
+
+	\begin{block}{Análisis cualitativo}
+	\begin{itemize}
+	\item Comparar CMM vs. \emph{Winning Percentage} (WP) sobre datos reales. Identificar características y situaciones distintivas
+	\item ¿El método CMM es \emph{justo}?
+	\item Tenemos resultados y un equipo. Determinar una estrategia para obtener la mayor posición posible \emph{buscando} minimizar la 
+	cantidad de partidos ganados
+	\end{itemize}
+	\end{block}
+	}
+\pause
+\alert{
+	En todos los casos, justificar elecciones y decisiones tomadas
+}
+
+}
+
+
+
+
+\begin{frame}[fragile]
+    \frametitle{TP1}
+    \framesubtitle{Material extra (optativo)}
+
+	\begin{block}{Datos reales}
+	\begin{itemize}
+	\item Datos con los resultados de los partidos del circuito ATP de 2015 (tomados de \cite{ATP})
+	\item Datos con los resultados de la temporada regular NBA 2016 hasta el 15/03 (tomados de \cite{Massey})
+	\end{itemize}
+	\end{block}
+
+	\begin{block}{Además}
+	\begin{itemize}
+	\item Dos scripts en \verb+python+ para transformar archivos con los formatos de \cite{ATP} y \cite{Massey} al formato del TP 
+	\item Más datos deportivos en \cite{datahub} (sin scripts), \cite{ATP}, \cite{Massey}
+	\item Tablas de posiciones de la NBA en fechas determinadas en \cite{BR}
+	\end{itemize}
+	\end{block}
+\end{frame}
+
+%\frame{
+%    \frametitle{TP1}
+%    \framesubtitle{Recomendaciones}
+%
+%	\begin{alertblock}{Importante}
+%	El TP no es solamente código. Hay que experimentar. Discutir. Volver a experimentar. Y escribir un reporte detallado
+%	\end{alertblock}
+%
+%	\begin{block}{Sugerencia de avance}
+%    \begin{itemize}
+%    \item X: EG, lectura de datos, armado sistema 
+%	\item Y: Experimentos cualitativos, planteo de experimentos cuantitativos
+%	\item Z: Entrega TP
+%	\end{itemize}
+%	\end{block}
+%
+%}
+
+
+
+\frame{
+	\frametitle{Bibliografía}
+
+	{\small
+	\bibliographystyle{plain}
+	\bibliography{../enunciado/tp1}
+	}
+}
+
+\end{document}
+
